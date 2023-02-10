@@ -30,7 +30,13 @@ async fn root() -> String {
 
 async fn handler(ConnectInfo(addr): ConnectInfo<SocketAddr>, body: String) {
     let ip = addr.ip();
-    let card_num: u32 = body.parse().unwrap();
+    let card_num: u32 = match body.parse() {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln! {"{}\n{}", e, body};
+            return;
+        }
+    };
     let c = instance().clone();
     if let Some(v) = c.lock().unwrap().insert(card_num, ip) {
         if v != ip {
