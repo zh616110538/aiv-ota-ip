@@ -4,13 +4,19 @@ use axum::{
     Router,
 };
 use once_cell::sync::OnceCell;
-use std::collections::HashMap;
-use std::net::{IpAddr, SocketAddr};
+// use std::collections::HashMap;
+use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
+extern crate redis;
+use redis::{Commands, Connection};
 
-fn instance() -> &'static Arc<Mutex<HashMap<u32, IpAddr>>> {
-    static INSTANCE: OnceCell<Arc<Mutex<HashMap<u32, IpAddr>>>> = OnceCell::new();
-    INSTANCE.get_or_init(|| Arc::new(Mutex::new(HashMap::new())))
+fn instance() -> &'static Arc<Mutex<Connection>> {
+    static INSTANCE: OnceCell<Arc<Mutex<Connection>>> = OnceCell::new();
+    INSTANCE.get_or_init(|| {
+        let client = redis::Client::open("redis://127.0.0.1/").unwrap();
+        let con = client.get_connection().expect("请装一下redis-server");
+        return Arc::new(Mutex::new(con));
+    })
 }
 
 #[tokio::main]
@@ -25,7 +31,20 @@ async fn main() {
 }
 
 async fn root() -> String {
-    format!("{:#?}", instance().clone().lock().unwrap())
+    let c = instance().clone();
+    let mut con = c.lock().unwrap();
+    let keys: Vec<String> = con.keys("*").unwrap();
+    let length = keys.len();
+    if length > 0 {
+        let values: Vec<String> = con.mget(&keys).unwrap();
+        let mut result = String::new();
+        // return format!("{:?}", values);
+        for i in 0..length {
+            result.push_str(format!("{} {}\n", keys[i], values[i]).as_str());
+        }
+        return result;
+    }
+    "".to_string()
 }
 
 async fn handler(ConnectInfo(addr): ConnectInfo<SocketAddr>, body: String) {
@@ -38,9 +57,12 @@ async fn handler(ConnectInfo(addr): ConnectInfo<SocketAddr>, body: String) {
         }
     };
     let c = instance().clone();
-    if let Some(v) = c.lock().unwrap().insert(card_num, ip) {
-        if v != ip {
-            eprintln!("conflict card num {} between {} and {}", card_num, ip, v);
-        }
-    };
+    let mut con = c.lock().unwrap();
+    let _: () = redis::cmd("SET")
+        .arg(card_num)
+        .arg(ip.to_string())
+        .arg("EX")
+        .arg("180")
+        .query(&mut con)
+        .unwrap();
 }
