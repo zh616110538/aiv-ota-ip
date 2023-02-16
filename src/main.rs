@@ -77,6 +77,11 @@ async fn json() -> Json<Vec<Item>> {
                 ip: values[i].clone(),
             });
         }
+        result.sort_by(|item1, item2| {
+            let u1 = item1.name.parse::<u32>().unwrap_or_default();
+            let u2 = item2.name.parse::<u32>().unwrap_or_default();
+            u1.cmp(&u2)
+        })
     }
     Json(result)
 }
