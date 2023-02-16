@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIV车号IP查询</title>
+    <script src="./lib/vue.js"></script>
+    <script src="./lib/axios.js"></script>
+    <!-- 引入组件库 -->
+    <script src="./lib/index.js"></script>
+    <style>
+        .table {
+            width: 560px;
+            margin: 0 auto
+        }
+        .table li{
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+        .table li div{
+            flex:1;
+            height: 32px;
+            line-height: 32px;
+            font-size: 14px;
+            color:#353535;
+            text-align: center;
+        }
+        li.header{
+            background-color: lightblue;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="demo">
+        <ul class="table">
+            <li>
+                <div class="label">名称</div><div class="value">IP</div>
+            </li>
+            <li v-for="(item,i) in tableData" :key="item.ip">
+                <div class="label">{{item.name}}</div><div class="value">{{item.ip}}</div>
+            </li>
+        </ul>
+    </div>
+</body>
+<script>
+    let delTime = 2000; //刷新请求接口间隔时间，单位为毫秒；
+    let url = './api/getinfo';  // get请求路径
+    var app5 = new Vue({
+        el: '#demo',
+        data:{
+            //tableData 列表要显示的数据，数据格式如js/data.json所示
+            tableData: [],
+            timer:null
+        },
+        mounted() {
+            this.$nextTick(()=>{
+                this.getJson();
+                this.timer = setInterval(this.getJson, delTime);
+            })
+        },
+        methods: {
+            getJson: function() {
+                axios.get(url)
+                    .then( (res)=> {
+                        // 请求成功返回
+                        console.log(res)
+                        if(res.status === 200){
+                            this.tableData = res.data || [];
+                        }else{
+                            this.tableData = [];
+                        }
+                        
+                        // console.log(res);
+                    })
+                    .catch( (err)=> {
+                        // 请求失败返回
+                        console.log(err);
+                    })
+            }
+        },
+        beforeDestroy(){
+            clearInterval(this.timer);
+        }
+    })
+</script>
+
+</html>

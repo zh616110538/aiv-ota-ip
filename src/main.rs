@@ -1,10 +1,11 @@
 use axum::{
     extract::ConnectInfo,
+    response::{Html, Json},
     routing::{get, post},
     Router,
 };
 use once_cell::sync::OnceCell;
-// use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 extern crate redis;
@@ -23,6 +24,11 @@ fn instance() -> &'static Arc<Mutex<Connection>> {
 async fn main() {
     let app = Router::new()
         .route("/", get(root))
+        .route("/lib/axios.js", get(axios_js))
+        .route("/lib/index.css", get(index_css))
+        .route("/lib/index.js", get(index_js))
+        .route("/lib/vue.js", get(vue_js))
+        .route("/api/getinfo", get(json))
         .route("/api/report_num", post(handler));
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
         .serve(app.into_make_service_with_connect_info::<SocketAddr>())
@@ -30,21 +36,49 @@ async fn main() {
         .unwrap();
 }
 
-async fn root() -> String {
+async fn root() -> Html<&'static str> {
+    Html(include_str!("../assets/index.html"))
+}
+
+async fn axios_js() -> Html<&'static str> {
+    Html(include_str!("../assets/lib/axios.js"))
+}
+
+async fn index_css() -> Html<&'static str> {
+    Html(include_str!("../assets/lib/index.css"))
+}
+
+async fn index_js() -> Html<&'static str> {
+    Html(include_str!("../assets/lib/index.js"))
+}
+
+async fn vue_js() -> Html<&'static str> {
+    Html(include_str!("../assets/lib/vue.js"))
+}
+
+#[derive(Serialize, Deserialize)]
+struct Item {
+    name: String,
+    ip: String,
+}
+
+async fn json() -> Json<Vec<Item>> {
     let c = instance().clone();
     let mut con = c.lock().unwrap();
     let keys: Vec<String> = con.keys("*").unwrap();
     let length = keys.len();
+    let mut result = Vec::new();
     if length > 0 {
         let values: Vec<String> = con.mget(&keys).unwrap();
-        let mut result = String::new();
-        // return format!("{:?}", values);
         for i in 0..length {
-            result.push_str(format!("{} {}\n", keys[i], values[i]).as_str());
+            // result.push_str(format!("{} {}\n", keys[i], values[i]).as_str());
+            result.push(Item {
+                name: keys[i].clone(),
+                ip: values[i].clone(),
+            });
         }
-        return result;
     }
-    "".to_string()
+    Json(result)
 }
 
 async fn handler(ConnectInfo(addr): ConnectInfo<SocketAddr>, body: String) {
@@ -65,4 +99,27 @@ async fn handler(ConnectInfo(addr): ConnectInfo<SocketAddr>, body: String) {
         .arg("180")
         .query(&mut con)
         .unwrap();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_json() {
+        let mut is = Vec::new();
+        is.push(Item {
+            name: "802".to_string(),
+            ip: "10.111.0.66".to_string(),
+        });
+        is.push(Item {
+            name: "803".to_string(),
+            ip: "10.111.0.67".to_string(),
+        });
+        is.push(Item {
+            name: "804".to_string(),
+            ip: "10.111.0.68".to_string(),
+        });
+        println!("{}", serde_json::to_string_pretty(&is).unwrap());
+    }
 }
