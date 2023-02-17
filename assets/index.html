@@ -37,7 +37,7 @@
     <div id="demo">
         <ul class="table">
             <li>
-                <div class="label">名称</div><div class="value">IP</div>
+                <div class="label">AIV车号</div><div class="value">IP</div>
             </li>
             <li v-for="(item,i) in tableData" :key="item.ip">
                 <div class="label">{{item.name}}</div><div class="value">{{item.ip}}</div>
@@ -46,7 +46,7 @@
     </div>
 </body>
 <script>
-    let delTime = 2000; //刷新请求接口间隔时间，单位为毫秒；
+    let delTime = 60000; //刷新请求接口间隔时间，单位为毫秒；
     let url = './api/getinfo';  // get请求路径
     var app5 = new Vue({
         el: '#demo',
