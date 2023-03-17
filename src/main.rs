@@ -101,7 +101,7 @@ async fn handler(ConnectInfo(addr): ConnectInfo<SocketAddr>, body: String) {
         .arg(card_num)
         .arg(ip.to_string())
         .arg("EX")
-        .arg("180")
+        .arg("30")
         .query(&mut con)
         .unwrap();
 }
