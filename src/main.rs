@@ -14,7 +14,9 @@ use redis::{Commands, Connection};
 fn instance() -> &'static Arc<Mutex<Connection>> {
     static INSTANCE: OnceCell<Arc<Mutex<Connection>>> = OnceCell::new();
     INSTANCE.get_or_init(|| {
-        let client = redis::Client::open("redis://127.0.0.1/").unwrap();
+        let args: Vec<String> = std::env::args().collect();
+        //argv[1]: redis://127.0.0.1:6379/
+        let client = redis::Client::open(args[1].clone()).unwrap();
         let con = client.get_connection().expect("请装一下redis-server");
         return Arc::new(Mutex::new(con));
     })
@@ -69,7 +71,11 @@ async fn json() -> Json<Vec<Item>> {
     let length = keys.len();
     let mut result = Vec::new();
     if length > 0 {
-        let values: Vec<String> = con.mget(&keys).unwrap();
+        let values = con.mget(&keys);
+        if values.is_err() {
+            return Json(result);
+        }
+        let values: Vec<String> = values.unwrap();
         for i in 0..length {
             // result.push_str(format!("{} {}\n", keys[i], values[i]).as_str());
             result.push(Item {

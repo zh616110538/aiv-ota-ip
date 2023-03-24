@@ -1,0 +1,11 @@
+[Unit]
+Description=Run aiv ota ip
+
+[Service]
+User=aiv
+Group=aiv
+Restart=always
+ExecStart=/home/aiv/.aiv-ota/aiv-ota-ip redis://127.0.0.1:6379/
+
+[Install]
+WantedBy=multi-user.target

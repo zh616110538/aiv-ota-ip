@@ -1,0 +1,9 @@
+[Unit]
+Description=get car num from openvpn server log
+
+[Service]
+Restart=always
+ExecStart=/bin/bash /home/aiv/.aiv-ota/collect_ip.sh
+
+[Install]
+WantedBy=multi-user.target
