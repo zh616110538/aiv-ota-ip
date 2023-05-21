@@ -44,47 +44,42 @@ async fn main() {
 
 const EXPIRE_TIME: u64 = 60 * 60 * 24 * 30;
 
-async fn root() -> (TypedHeader<Expires>, Html<&'static str>) {
+fn make_expires_head() -> Expires {
     let time = SystemTime::now() + Duration::from_secs(EXPIRE_TIME);
-    let expires = Expires::from(time);
+    Expires::from(time)
+}
+
+async fn root() -> (TypedHeader<Expires>, Html<&'static str>) {
     (
-        TypedHeader(expires),
+        TypedHeader(make_expires_head()),
         Html(include_str!("../assets/index.html")),
     )
 }
 
 async fn axios_js() -> (TypedHeader<Expires>, Html<&'static str>) {
-    let time = SystemTime::now() + Duration::from_secs(EXPIRE_TIME);
-    let expires = Expires::from(time);
     (
-        TypedHeader(expires),
+        TypedHeader(make_expires_head()),
         Html(include_str!("../assets/lib/axios.js")),
     )
 }
 
 async fn index_css() -> (TypedHeader<Expires>, Html<&'static str>) {
-    let time = SystemTime::now() + Duration::from_secs(EXPIRE_TIME);
-    let expires = Expires::from(time);
     (
-        TypedHeader(expires),
+        TypedHeader(make_expires_head()),
         Html(include_str!("../assets/lib/index.css")),
     )
 }
 
 async fn index_js() -> (TypedHeader<Expires>, Html<&'static str>) {
-    let time = SystemTime::now() + Duration::from_secs(EXPIRE_TIME);
-    let expires = Expires::from(time);
     (
-        TypedHeader(expires),
+        TypedHeader(make_expires_head()),
         Html(include_str!("../assets/lib/index.js")),
     )
 }
 
 async fn vue_js() -> (TypedHeader<Expires>, Html<&'static str>) {
-    let time = SystemTime::now() + Duration::from_secs(EXPIRE_TIME);
-    let expires = Expires::from(time);
     (
-        TypedHeader(expires),
+        TypedHeader(make_expires_head()),
         Html(include_str!("../assets/lib/vue.js")),
     )
 }
