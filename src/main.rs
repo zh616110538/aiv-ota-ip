@@ -123,7 +123,7 @@ async fn handler(ConnectInfo(addr): ConnectInfo<SocketAddr>, body: String) {
     let card_num: u32 = match body.parse() {
         Ok(v) => v,
         Err(e) => {
-            eprintln! {"{}\n{}", e, body};
+            eprintln! {"[Error] [{}]: {}\n{}", ip, e, body};
             return;
         }
     };
